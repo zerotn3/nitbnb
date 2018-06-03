@@ -46,14 +46,28 @@ function buycoin() {
 let marketName  = "OSTBTC";
 let amount      = 50;
 let price       = 0.00002078;
-binance.sell(marketName, amount, price, {
-  type: 'LIMIT'
-}, (error, response) => {
-  if (error) {
-    //reject(error);
-  }
-  //resolve(response);
-  console.log("Limit Buy response", response);
-  console.log(" Đã mua : order id: " + response.orderId);
-});
+
+// let al = 2.059e-8;
+// let step = 1
+// let amountl = binance.roundStep(al, step.toFixed(8));
+// binance.sell(marketName, amount, price, {
+//   type: 'LIMIT'
+// }, (error, response) => {
+//   if (error) {
+//     //reject(error);
+//   }
+//   //resolve(response);
+//   console.log("Limit Buy response", response);
+//   console.log(" Đã mua : order id: " + response.orderId);
+// });
+let countrun = 0;
+  let minutes = 0.01, the_interval = minutes * 60 * 1000;
+  setInterval(function () {
+    binance.bookTickers('OSTBTC', (error, ticker) => {
+      console.log("bookTickers", ticker);
+    });
+    countrun = countrun + 1;
+    //console.log("==========Chạy được   " + countrun + "   lần=============")
+  }, the_interval);
+
 }

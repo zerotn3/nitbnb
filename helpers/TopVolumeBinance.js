@@ -5,6 +5,7 @@ const _ = require('lodash');
 const moment = require('moment');
 
 const binance = require('node-binance-api');
+const constants = require('../config/constants.json');
 
 const ListCoinBinance = require('../models/ListCoinBinance');
 const ListCoinBuySellBinance = require('../models/ListCoinBuySellBinance');
@@ -12,7 +13,7 @@ binance.options({
   APIKEY: 'iU9QiXtPWAeMr7Xjo9wDIMH32BuV2b9xh1CsLzkwXTrhpVV08iR2jt7kYTN2r1MN',
   APISECRET: '5Fb7pFw96aPW2lBNMV8JDJFpTtniXLde51wGcsAGEmUtSu3tf7li6pBGb8dFjrRJ',
   useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
-  test: true // If you want to use sandbox mode where orders are simulated
+  //test: true // If you want to use sandbox mode where orders are simulated
 });
 
 /**
@@ -37,6 +38,8 @@ const searchListAllSysBnb = () => {
                 lstCoinBinance.marketNm = symbolNm;
                 lstCoinBinance.baseAsset = symbol.baseAsset;
                 lstCoinBinance.stepSize = Number(symbol.filters[1].stepSize);
+                lstCoinBinance.minQty = Number(symbol.filters[1].minQty);
+                lstCoinBinance.minNotional = Number(symbol.filters[2].minNotional);
                 lstCoinBinance.save(function (err) {
                   if (!err) {
                     console.log(`Coin mới vừa cập nhật : ${symbolNm}`);
@@ -64,7 +67,7 @@ const checkSymboyActive = () => {
       console.log(err);
     }
     for (let coinInfo of data) {
-      checkPriceRuntime(coinInfo.marketNm, coinInfo.baseAsset, coinInfo.percentSell, coinInfo.stepSize, coinInfo.buy_pri, coinInfo.btcQty);
+      checkPriceRuntime(coinInfo.marketNm, coinInfo.baseAsset, coinInfo.minNotional, coinInfo.percentSell, coinInfo.stepSize, coinInfo.buy_pri, coinInfo.btcQty);
     }
   });
 };
@@ -76,7 +79,7 @@ const checkSymboyActive = () => {
  * @param {*} buy_pri
  * @param {*} btcQty
  */
-const checkPriceRuntime = async (marketNm, baseAsset, percentSell, stepSize, buy_pri, btcQty) => {
+const checkPriceRuntime = async (marketNm, baseAsset, minNotional, percentSell, stepSize, buy_pri, btcQty) => {
   binance.bookTickers(marketNm, (error, ticker) => {
     let bidPrice = Number(ticker.bidPrice);
     let bidQty = Number(ticker.bidQty);
@@ -85,23 +88,31 @@ const checkPriceRuntime = async (marketNm, baseAsset, percentSell, stepSize, buy
     //Check balance coin which checked active.
     console.log(`Checking ${marketNm} ...`);
     getBalanceBnB(baseAsset).then((result) => {
+      let qtyAble = (askPrice * Number(result.available)).toFixed(8);
       //check buy
-      if (Number(result.available) <= 0 && Number(result.onOrder) <= 0 && askPrice <= buy_pri) {
+      if (askPrice <= buy_pri && Number(qtyAble) < minNotional) {
         //Function buy/ save history
         console.log(`Mua ${marketNm} tại giá ${askPrice} `);
-        let quantityBuy = askPrice * btcQty;
-        buyLimit(marketNm, quantityBuy, askPrice, stepSize).then((result) => {
-          if (result.status == "FILLED" || result.status == "NEW") {
-            //funcUpdatePriceBuy(marketNm, askPrice);
-            funcSaveHistoryBuySell(marketNm, askPrice, percentSell, 'BUY', result.orderId, result.status, result.executedQty, result.price);
-          }
-        }).catch((err) => {
+        let quantityBuy = btcQty / askPrice;
+        buyLimit(marketNm, quantityBuy, askPrice, stepSize.toFixed(8)).then(
+          (result) => {
+            if (!result) {
+              console.log(`Chua mua duoc`);
+            } else {
+              if (result.status == "FILLED" || result.status == "NEW") {
+                //funcUpdatePriceBuy(marketNm, askPrice);
+                console.log(`>>>>>> MUA THÀNH CÔNG ${marketNm} VỚI STATUS ${result.status} VÀ GIÁ ${askPrice}`)
+                funcSaveHistoryBuySell(marketNm, askPrice, percentSell, 'BUY', result.orderId, result.status, result.executedQty, result.price);
+              }
+            }
+          }).catch((err) => {
           console.log(err);
         });
       }
       //Check sell
       const sellPriceAsPer = (Number(buy_pri) + ((Number(buy_pri) * Number(percentSell)) / 100)).toFixed(8);
-      if (Number(result.available) > 0 && Number(result.onOrder) > 0 && bidPrice >= sellPriceAsPer) {
+      let amount = binance.roundStep(result.available, stepSize.toFixed(8));
+      if (Number(amount) > 0 && bidPrice >= sellPriceAsPer) {
         //Function buy/ save history
         console.log(`Bán ${marketNm} tại giá ${askPrice} `);
         sellLimit(marketNm, result.available, bidPrice).then((result) => {
@@ -169,27 +180,22 @@ const funcUpdatePriceBuy = (marketNm, CurrentPrice) => {
  * @param {*} rate
  */
 const funcSaveHistoryBuySell = (marketName, buy_pri, percentSell, typeP, orderId, status, qty, rate) => {
-  return new Promise((resolve, reject) => {
-    const enterTime = moment(new Date(), constants.DATE_FORMAT)
-      .tz("Asia/Ho_Chi_Minh")
-      .toDate();
-    let listCoinBuySellBinance = new ListCoinBuySellBinance();
-    listCoinBuySellBinance.marketNm = marketName;
-    listCoinBuySellBinance.buy_pri = buy_pri;
-    listCoinBuySellBinance.percentSell = percentSell;
-    listCoinBuySellBinance.type = typeP;
-    listCoinBuySellBinance.orderId = orderId;
-    listCoinBuySellBinance.status = status;
-    listCoinBuySellBinance.qty = qty;
-    listCoinBuySellBinance.rate = rate;
-    listCoinBuySellBinance.save(function (err) {
-      if (!err) {
-        resolve(`Save Done`);
-        console.log(`Đã ${typeP}: ${marketName} với giá ${buy_pri} tại thời điểm ${enterTime}`)
-      } else {
-        reject(`Save Fail`);
-      }
-    });
+  const enterTime = moment(new Date(), constants.DATE_FORMAT).tz("Asia/Ho_Chi_Minh").toDate();
+  let listCoinBuySellBinance = new ListCoinBuySellBinance();
+  listCoinBuySellBinance.marketNm = marketName;
+  listCoinBuySellBinance.buy_pri = buy_pri;
+  listCoinBuySellBinance.percentSell = percentSell;
+  listCoinBuySellBinance.type = typeP;
+  listCoinBuySellBinance.orderId = orderId;
+  listCoinBuySellBinance.status = status;
+  listCoinBuySellBinance.qty = qty;
+  listCoinBuySellBinance.rate = rate;
+  listCoinBuySellBinance.save(function (err) {
+    if (!err) {
+      console.log(`Đã ${typeP}: ${marketName} với giá ${buy_pri} tại thời điểm ${enterTime}`)
+    } else {
+      Console.log(`>>>>>>>>>>>>> [SOS001 - funcSaveHistoryBuySell] Save status mua không thành công`);
+    }
   });
 }
 /**
@@ -199,7 +205,7 @@ const funcSaveHistoryBuySell = (marketName, buy_pri, percentSell, typeP, orderId
  * @param {*} price
  */
 const buyLimit = (marketName, quantity, price, stepSize) => {
-  let amount = binance.roundStep(quantity, stepSize);
+  let amount = Number(binance.roundStep(quantity, stepSize));
   return new Promise((resolve, reject) => {
     binance.buy(marketName, amount, price, {
       type: 'LIMIT'
@@ -208,8 +214,6 @@ const buyLimit = (marketName, quantity, price, stepSize) => {
         reject(error);
       }
       resolve(response);
-      console.log("Limit Buy response", response);
-      console.log(" Đã mua : order id: " + response.orderId);
     });
   });
 }

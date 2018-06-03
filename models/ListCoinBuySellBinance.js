@@ -9,8 +9,8 @@ const Schema = mongoose.Schema;
 const relationship = require("mongoose-relationship");
 
 const listCoinBuySellBinanceSchema = new mongoose.Schema({
-  marketNn: String,
-  enterPrice: Number,
+  marketNm: String,
+  buy_pri: Number,
   enterTime: String,
   percentSell: String,
   type: String,

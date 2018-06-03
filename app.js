@@ -336,7 +336,14 @@ app.use(errorHandler());
  */
 app.listen(app.get('port'), () => {
   topVolumeBinance.searchListAllSysBnb();
-  topVolumeBinance.checkSymboyActive();
+  
+  let countrun = 0;
+  let minutes = 0.02, the_interval = minutes * 60 * 1000;
+  setInterval(function () {
+    topVolumeBinance.checkSymboyActive();
+    countrun = countrun + 1;
+    //console.log("==========Chạy được   " + countrun + "   lần=============")
+  }, the_interval);
 });
 
 module.exports = app;

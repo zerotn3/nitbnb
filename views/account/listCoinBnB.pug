@@ -54,20 +54,22 @@ block content
             th Giá mua
             th Giá Chốt Theo %
             th Thời gian Vào
+            th Status
             th Loại
             th Số lượng
             th Giá
         tbody
-          //- var i = 0;
+          - var i = 0;
             each coin in listBuySell
               - i += 1
               tr
                 td= i
                 td
                   a(href='https://bittrex.com/Market/Index?MarketName=' + coin.marketNm, target="_blank")= coin.marketNm
-                td= coin.enterPrice
-                td= coin.type == 'SELL' ? '' : coin.enterPrice == null ? '' : ((coin.enterPrice * coin.percentSell) / 100 + coin.enterPrice).toFixed(8)
+                td= coin.buy_pri
+                td= coin.type == 'SELL' ? '' : coin.buy_pri == null ? '' : ((coin.buy_pri * coin.percentSell) / 100 + coin.buy_pri).toFixed(8)
                 td= moment(coin.enterTime).format(DATE_FORMAT)
+                td= coin.status
                 td= coin.type
                 td= coin.qty
                 td= coin.rate

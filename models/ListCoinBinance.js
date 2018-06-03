@@ -12,6 +12,8 @@ const listCoinBinanceSchema = new mongoose.Schema({
   marketNm : String,
   baseAsset: String,
   stepSize: Number,
+  minQty: Number,
+  minNotional: Number,
   minTradeSize : Number,
   baseVol: Number,
   activeFlag: String,

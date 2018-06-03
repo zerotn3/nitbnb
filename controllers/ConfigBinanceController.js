@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const ListCoinBinance = require('../models/ListCoinBinance');
+const ListCoinBuySellBinance = require('../models/ListCoinBuySellBinance');
 const moment = require('moment-timezone');
 /**
  * Save active coin
@@ -36,15 +37,15 @@ exports.postSelectCoinActiveCheck = async (req, res) => {
  */
 exports.getListCoinBnB = async (req, res) => {
   let p0 = await ListCoinBinance.find({});
-  let p1 = await ListCoinBinance.find({
-    activeFlag: "Y"
-  });
-  Promise.all([p0, p1])
+  let p1 = await ListCoinBinance.find({activeFlag: "Y"});
+  let p2 = await ListCoinBuySellBinance.find({});
+  Promise.all([p0, p1, p2])
     .then((data) => {
       res.render('account/listCoinBnB', {
         title: 'List Coin',
         listCoin: data[0],
         listCoinActive: data[1],
+        listBuySell: data[2],
       });
     })
     .catch((err) => {
