@@ -1,0 +1,125 @@
+extends ../layout
+block page_css
+  link(rel='stylesheet', href='/global/vendor/datatables-bootstrap/dataTables.bootstrap.css')
+  link(rel='stylesheet', href='/assets/css/datatables.css')
+  link(rel='stylesheet', href='/css/table.css')
+
+block content
+  .panel
+    header.panel-heading
+      .panel-actions
+      h3.panel-title.margin-top-0.panel-title.text-primary(style='padding: 20px 30px')
+        i.icon.md-book(aria-hidden='true')
+        | List Coin Booked
+    .panel-body
+      table.table.table-hover.dataTable.table-striped.w-full(data-plugin='dataTable')
+        thead
+          tr
+            th #No
+            th Market Name
+            th Đang Chạy
+            th Giá Vào
+            th % Chốt
+            th Bitcoin QTY
+            th Time Enter
+            th Bỏ Check
+        tbody
+          - var i = 0;
+            each usr in listCoinActive
+              - i += 1
+              tr
+                td= i
+                td
+                  a(href='https://bittrex.com/Market/Index?MarketName=' + usr.marketNm, target="_blank")= usr.marketNm
+                td= usr.activeFlag == 'Y' ? 'YES' : 'NO'
+                td= usr.buy_pri
+                td= usr.percentSell == null ? '' : usr.percentSell + '%'
+                td= usr.btcQty
+                td= moment(usr.lastTime).format(DATE_FORMAT)
+                td
+                  a.btn.btn-md.btn-icon.btn-pure.btn-primary.on-default.remove-row.waves-effect(href='/removeCheckBnB?code=' + usr.marketNm.toString(), data-toggle='tooltip', data-original-title='Sent', onclick="return confirm('Bạn chắc chắn sẽ bỏ check coin này không ?');")
+                    i.icon.md-check(aria-hidden='true')
+  .panel
+    header.panel-heading
+      .panel-actions
+      h3.panel-title.margin-top-0.panel-title.text-primary(style='padding: 20px 30px')
+        i.icon.md-book(aria-hidden='true')
+        | List Lệnh Đã Book & Sell
+    .panel-body
+      table.table.table-hover.dataTable.table-striped.w-full(data-plugin='dataTable')
+        thead
+          tr
+            th #No
+            th Market Name
+            th Giá mua
+            th Giá Chốt Theo %
+            th Thời gian Vào
+            th Loại
+            th Số lượng
+            th Giá
+        tbody
+          //- var i = 0;
+            each coin in listBuySell
+              - i += 1
+              tr
+                td= i
+                td
+                  a(href='https://bittrex.com/Market/Index?MarketName=' + coin.marketNm, target="_blank")= coin.marketNm
+                td= coin.enterPrice
+                td= coin.type == 'SELL' ? '' : coin.enterPrice == null ? '' : ((coin.enterPrice * coin.percentSell) / 100 + coin.enterPrice).toFixed(8)
+                td= moment(coin.enterTime).format(DATE_FORMAT)
+                td= coin.type
+                td= coin.qty
+                td= coin.rate
+
+  .panel
+    .col-xl-6.col-md-6.col-xs-12
+      .panel
+        header.panel-heading
+          .panel-actions
+          h3.panel-title.margin-top-0.panel-title.text-primary(style='padding: 20px 30px')
+            i.icon.md-book(aria-hidden='true')
+            | Config & Start
+        .panel-body
+          form#configBittrex.form.form-vertical(action="/admin/selectCoinActiveCheck", method='post')
+            input(type='hidden', name='_csrf', value=_csrf)
+            .form-group.control-group
+              label.form-control-label Select Wallet
+              .controls
+                input#marketNm.form-control(type='text',name='marketNm', list='marketNmlst')
+                datalist#marketNmlst
+                  - var i = 0;
+                    each coin in listCoin
+                      option(value=coin.marketNm) #{coin.marketNm}
+            .form-group.control-group
+              label.form-control-label Đặt Giá Mua:
+              .controls
+                input.form-control(type='text', name='buy_pri', id='buy_pri', placeholder='E.g 0.01, 0.1, 1', required)
+            .form-group.control-group
+              label.form-control-label Đặt % chốt lệnh:
+              .controls
+                input.form-control(type='text', name='percentSell', id='percentSell', placeholder='E.g 3, 4, 5', required )
+            .form-group.control-group
+              label.form-control-label Số BTC mỗi lệnh:
+              .controls
+                input.form-control(type='text', name='btcQty', id='btcQty', placeholder='E.g 0.1 ~ 1', required )
+            .form-group.control-group
+              .span
+                input(type='checkbox', value='Y', name='activeFlag', id='activeFlag', required)
+                |  Check để bắt đầu chạy.
+            .form-group.control-group
+              .controls
+                button.btn.btn-primary(type='submit')
+                  | Submit
+
+  script.
+    jQuery(document).ready(function () {
+      setTimeout(function () {
+        $('table').parent().attr('style', 'overflow: scroll');
+      }, 100)
+    });
+
+block scripts
+  script(src='/global/vendor/datatables/jquery.dataTables.min.js')
+  script(src='/global/vendor/datatables-bootstrap/dataTables.bootstrap.js')
+  script(src='/global/js/Plugin/datatables.min.js')
