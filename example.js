@@ -1,16 +1,8 @@
 // const bittrex = require('node-bittrex-api');
 
-// bittrex.options({
-//   'apikey' : '749a157ead0c4410b6914877bdb44c6f',
-//   'apisecret' : '167d943d554f408e9dccedb6c3a95d2c',
-// });
-
 const binance = require('node-binance-api');
 binance.options({
-  APIKEY: 'iU9QiXtPWAeMr7Xjo9wDIMH32BuV2b9xh1CsLzkwXTrhpVV08iR2jt7kYTN2r1MN',
-  APISECRET: '5Fb7pFw96aPW2lBNMV8JDJFpTtniXLde51wGcsAGEmUtSu3tf7li6pBGb8dFjrRJ',
-  //useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
-  //test: true // If you want to use sandbox mode where orders are simulated
+  
 });
 
 buycoin();
@@ -35,39 +27,43 @@ buycoin();
 // }
 
 function buycoin() {
-// binance.balance((error, balances) => {
-//   console.log("balances()", balances);
-//   console.log("ETH balance: ", balances.ETH.available);
-//   console.log("ETH balance: ", balances.ETH.onOrder);
-// });
-// binance.exchangeInfo(function(response) {
-// 	console.log(response);
-// });
-let marketName  = "OSTBTC";
-let amount      = 50;
-let price       = 0.00002078;
+  binance.balance((error, balances) => {
+    console.log("balances()", balances);
+    for (let symbol of balances) {
+      if (symbol.available != 0) {
+        console.log("ETH balance: ", balances.ETH.available);
+        console.log("ETH balance: ", balances.ETH.onOrder);
+      }
+    }
+  });
+  // binance.exchangeInfo(function (response) {
+  //   console.log(response);
+  // });
+  // let marketName = "OSTBTC";
+  // let amount = 50;
+  // let price = 0.00002078;
 
-// let al = 2.059e-8;
-// let step = 1
-// let amountl = binance.roundStep(al, step.toFixed(8));
-// binance.sell(marketName, amount, price, {
-//   type: 'LIMIT'
-// }, (error, response) => {
-//   if (error) {
-//     //reject(error);
-//   }
-//   //resolve(response);
-//   console.log("Limit Buy response", response);
-//   console.log(" Đã mua : order id: " + response.orderId);
-// });
-let countrun = 0;
-  let minutes = 0.01, the_interval = minutes * 60 * 1000;
-  setInterval(function () {
-    binance.bookTickers('OSTBTC', (error, ticker) => {
-      console.log("bookTickers", ticker);
-    });
-    countrun = countrun + 1;
-    //console.log("==========Chạy được   " + countrun + "   lần=============")
-  }, the_interval);
+  // let al = 2.059e-8;
+  // let step = 1
+  // let amountl = binance.roundStep(al, step.toFixed(8));
+  // binance.sell(marketName, amount, price, {
+  //   type: 'LIMIT'
+  // }, (error, response) => {
+  //   if (error) {
+  //     //reject(error);
+  //   }
+  //   //resolve(response);
+  //   console.log("Limit Buy response", response);
+  //   console.log(" Đã mua : order id: " + response.orderId);
+  // });
+  // let countrun = 0;
+  //   let minutes = 0.01, the_interval = minutes * 60 * 1000;
+  //   setInterval(function () {
+  //     binance.bookTickers('OSTBTC', (error, ticker) => {
+  //       console.log("bookTickers", ticker);
+  //     });
+  //     countrun = countrun + 1;
+  //     //console.log("==========Chạy được   " + countrun + "   lần=============")
+  //   }, the_interval);
 
 }

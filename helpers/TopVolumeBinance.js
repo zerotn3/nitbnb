@@ -10,10 +10,7 @@ const constants = require('../config/constants.json');
 const ListCoinBinance = require('../models/ListCoinBinance');
 const ListCoinBuySellBinance = require('../models/ListCoinBuySellBinance');
 binance.options({
-  APIKEY: 'iU9QiXtPWAeMr7Xjo9wDIMH32BuV2b9xh1CsLzkwXTrhpVV08iR2jt7kYTN2r1MN',
-  APISECRET: '5Fb7pFw96aPW2lBNMV8JDJFpTtniXLde51wGcsAGEmUtSu3tf7li6pBGb8dFjrRJ',
-  useServerTime: true, // If you get timestamp errors, synchronize to server time at startup
-  //test: true // If you want to use sandbox mode where orders are simulated
+  
 });
 
 /**

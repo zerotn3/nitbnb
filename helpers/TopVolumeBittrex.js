@@ -13,8 +13,8 @@ const moment = require('moment');
 
 const constants = require('../config/constants.json');
 bittrex.options({
-  'apikey': '749a157ead0c4410b6914877bdb44c6f',
-  'apisecret': '167d943d554f408e9dccedb6c3a95d2c',
+  'apikey': '',
+  'apisecret': '',
 });
 
 const startFindBittex = () => {
